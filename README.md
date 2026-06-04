@@ -66,7 +66,7 @@ RawCert is a static, self-contained single-page application. There are no extern
 
 ### Contributing New Features
 1. Fork this repository.
-2. Edit [index.html](file:///d:/Deep/index.html).
+2. Edit [index.html](index.html).
 3. Open a Pull Request with a short explanation of your improvements.
 
 ### Found a Bug?
