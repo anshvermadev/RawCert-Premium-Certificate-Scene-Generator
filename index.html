@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RawCert — Premium Certificate Scene Generator</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=EB+Garamond:ital,wght@0,400..800;1,400..800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        /* Theme configurations */
+        body.theme-mint {
+            --theme-primary: #98D8C8; /* Mint Green */
+            --theme-accent: #E6B8A2; /* Dusty Pink */
+            --theme-foreground: #3D5A5B; /* Teal Gray */
+            --theme-highlight: #D4F1F4; /* Ice Mint */
+            --theme-background: #FFFFFF; /* Pure White */
+            --theme-muted: #E2E8F0; /* Slate Gray */
+            --theme-preview-bg: #FAF9F6;
+            --theme-grid-color: rgba(61, 90, 91, 0.18);
+        }
+
+        body.theme-retro {
+            --theme-primary: #FDE047; /* Yellow */
+            --theme-accent: #E2E8F0;
+            --theme-foreground: #1E293B; /* Dark Slate */
+            --theme-highlight: #FEF08A; /* Soft Yellow */
+            --theme-background: #FFFFFF;
+            --theme-muted: #E2E8F0;
+            --theme-preview-bg: #F8FAFC;
+            --theme-grid-color: rgba(30, 41, 59, 0.12);
+        }
+
+        body.theme-cyber {
+            --theme-primary: #F43F5E; /* Rose Pink */
+            --theme-accent: #6366F1; /* Violet Blue */
+            --theme-foreground: #FFFFFF;
+            --theme-highlight: #1E1B4B; /* Dark Indigo */
+            --theme-background: #0F172A; /* Slate 900 */
+            --theme-muted: #334155;
+            --theme-preview-bg: #0b0f19;
+            --theme-grid-color: rgba(244, 63, 94, 0.15);
+        }
+
+        body.theme-warm {
+            --theme-primary: #F97316; /* Sunset Orange */
+            --theme-accent: #A7F3D0; /* Sage Green */
+            --theme-foreground: #14532D; /* Deep Forest Green */
+            --theme-highlight: #FFEDD5; /* Peach Cream */
+            --theme-background: #FFFFFF;
+            --theme-muted: #E2E8F0;
+            --theme-preview-bg: #FAF6F0;
+            --theme-grid-color: rgba(20, 83, 45, 0.15);
+        }
+
+        :root {
+            /* Dynamic properties mapped to sliders (Original logic) */
+            --scene-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.6), 0 0 50px rgba(0, 0, 0, 0.2);
+            --scene-radius: 12px;
+            --scene-border-width: 1px;
+            --scene-border-color: rgba(255, 255, 255, 0.1);
+
+            /* Background controls */
+            --scene-bg: radial-gradient(circle at center, #232730 0%, #0a0c10 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--theme-background);
+            color: var(--theme-foreground);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Layout structure */
+        .app-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            flex-direction: row-reverse; /* Sidebar on right */
+        }
+
+        /* Right Sidebar */
+        .sidebar {
+            width: 420px;
+            height: 100vh;
+            background: var(--theme-background);
+            border-left: 4px solid var(--theme-foreground);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            overflow: hidden;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 20px 24px;
+            border-bottom: 4px solid var(--theme-foreground);
+            background: var(--theme-primary);
+            color: var(--theme-foreground);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .logo-container {
+            background: var(--theme-foreground);
+            color: var(--theme-background);
+            width: 36px;
+            height: 36px;
+            border: 2px solid var(--theme-foreground);
+            box-shadow: 2px 2px 0px 0px var(--theme-foreground);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0px;
+        }
+
+        .logo-container svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .brand-title {
+            font-weight: 900;
+            font-size: 20px;
+            letter-spacing: -1px;
+            font-family: 'Space Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        /* Tab Navigation inside Sidebar */
+        .sidebar-nav {
+            display: flex;
+            background: var(--theme-foreground);
+            border-bottom: 4px solid var(--theme-foreground);
+            transition: border-color 0.3s ease;
+        }
+
+        .nav-tab {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 2px;
+            background: var(--theme-foreground);
+            color: var(--theme-background);
+            opacity: 0.7;
+            border: none;
+            cursor: pointer;
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+
+        .nav-tab i {
+            width: 18px;
+            height: 18px;
+            margin-bottom: 4px;
+        }
+
+        .nav-tab:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-tab.active {
+            background: var(--theme-background);
+            color: var(--theme-foreground);
+            opacity: 1;
+            box-shadow: inset 0 -4px 0px 0px var(--theme-primary);
+        }
+
+        .new-badge {
+            position: absolute;
+            top: -6px;
+            right: -16px;
+            background: #d946ef; /* Purple pink */
+            color: white;
+            font-size: 8px;
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-weight: 800;
+            text-transform: uppercase;
+            border: 1px solid var(--theme-foreground);
+            font-family: 'Space Mono', monospace;
+        }
+
+        .sidebar-content {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            flex-grow: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--theme-foreground) transparent;
+        }
+
+        .sidebar-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: var(--theme-foreground);
+        }
+
+        /* Tab panels */
+        .tab-panel {
+            display: none;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .tab-panel.active {
+            display: flex;
+            animation: panelFadeIn 0.25s ease-out;
+        }
+
+        @keyframes panelFadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Neo-Brutalist Cards */
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .setting-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--theme-foreground);
+            background: var(--theme-highlight);
+            border: 2px solid var(--theme-foreground);
+            padding: 4px 10px;
+            align-self: flex-start;
+            box-shadow: 2px 2px 0px var(--theme-foreground);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .setting-card {
+            background: var(--theme-background);
+            border: 3px solid var(--theme-foreground);
+            box-shadow: 5px 5px 0px var(--theme-foreground);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Drag and Drop Uploader */
+        .upload-zone {
+            border: 3px dashed var(--theme-foreground);
+            padding: 24px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            background: var(--theme-highlight);
+            position: relative;
+        }
+
+        .upload-zone:hover {
+            transform: translate(-3px, -3px);
+            box-shadow: 5px 5px 0px var(--theme-foreground);
+            background: var(--theme-primary);
+        }
+
+        .upload-zone.dragover {
+            transform: translate(-3px, -3px);
+            box-shadow: 5px 5px 0px var(--theme-foreground);
+            background: var(--theme-primary);
+            border-style: solid;
+        }
+
+        .upload-icon {
+            color: var(--theme-foreground);
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--theme-foreground);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .upload-subtext {
+            font-size: 11px;
+            color: var(--theme-foreground);
+            opacity: 0.8;
+        }
+
+        .hidden-input {
+            display: none;
+        }
+
+
+
+        /* UI Theme preset grid */
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .theme-option-card {
+            background: var(--theme-background);
+            border: 2px solid var(--theme-foreground);
+            padding: 8px 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            transition: all 0.15s;
+        }
+
+        .theme-option-card:hover {
+            background: var(--theme-highlight);
+            transform: translate(-1px, -1px);
+            box-shadow: 2px 2px 0px var(--theme-foreground);
+        }
+
+        .theme-option-card.active {
+            background: var(--theme-primary);
+            box-shadow: 2px 2px 0px var(--theme-foreground);
+        }
+
+        .theme-preview-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .theme-dot {
+            width: 8px;
+            height: 8px;
+            border: 1px solid var(--theme-foreground);
+        }
+
+        /* Background Gradients grid */
+        .gradient-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .gradient-dot {
+            width: 100%;
+            aspect-ratio: 1;
+            border: 2px solid var(--theme-foreground);
+            cursor: pointer;
+            transition: all 0.15s;
+            position: relative;
+        }
+
+        .gradient-dot:hover {
+            transform: scale(1.1);
+        }
+
+        .gradient-dot.active {
+            border-color: var(--theme-foreground);
+            box-shadow: 2px 2px 0px var(--theme-foreground);
+            transform: scale(1.05);
+        }
+
+        /* Colors preset values */
+        .g-1 {
+            background: radial-gradient(circle at center, #232730 0%, #0a0c10 100%);
+        }
+
+        .g-2 {
+            background: linear-gradient(135deg, #1f1c2c 0%, #928dab 100%);
+        }
+
+        .g-3 {
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+        }
+
+        .g-4 {
+            background: linear-gradient(135deg, #3a7bd5 0%, #3a6073 100%);
+        }
+
+        .g-5 {
+            background: linear-gradient(135deg, #111827 0%, #312e81 100%);
+        }
+
+        .g-6 {
+            background: linear-gradient(135deg, #1e1512 0%, #0d0807 100%);
+        }
+
+        .g-7 {
+            background: linear-gradient(135deg, #051923 0%, #003554 100%);
+        }
+
+        .g-8 {
+            background: linear-gradient(135deg, #2a0845 0%, #6441a5 100%);
+        }
+
+        .g-9 {
+            background: linear-gradient(135deg, #141e30 0%, #243b55 100%);
+        }
+
+        .g-10 {
+            background: #dfdcd6;
+        }
+
+        /* Custom Input and Control Elements */
+        .control-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--theme-foreground);
+            font-family: 'Space Mono', monospace;
+            text-transform: uppercase;
+        }
+
+        .control-val {
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            color: var(--theme-foreground);
+            background: var(--theme-highlight);
+            border: 1px solid var(--theme-foreground);
+            padding: 1px 6px;
+        }
+
+        .slider-input {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 10px;
+            border: 2px solid var(--theme-foreground);
+            background: var(--theme-background);
+            outline: none;
+        }
+
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--theme-primary);
+            border: 2px solid var(--theme-foreground);
+            cursor: pointer;
+            box-shadow: 2px 2px 0px var(--theme-foreground);
+        }
+
+        .input-text {
+            width: 100%;
+            background: var(--theme-background);
+            border: 2px solid var(--theme-foreground);
+            padding: 10px 12px;
+            color: var(--theme-foreground);
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.15s;
+        }
+
+        .input-text:focus {
+            background: var(--theme-highlight);
+            box-shadow: 3px 3px 0px var(--theme-foreground);
+        }
+
+        .color-picker-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-picker {
+            -webkit-appearance: none;
+            border: none;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            background: none;
+        }
+
+        .color-picker::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        .color-picker::-webkit-color-swatch {
+            border: 2px solid var(--theme-foreground);
+            border-radius: 0px;
+        }
+
+        /* Aspect Ratio selection */
+        .ratio-group {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .ratio-btn {
+            background: var(--theme-background);
+            border: 2px solid var(--theme-foreground);
+            padding: 8px;
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--theme-foreground);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+
+        .ratio-btn:hover {
+            background: var(--theme-highlight);
+            transform: translate(-1px, -1px);
+            box-shadow: 2px 2px 0px var(--theme-foreground);
+        }
+
+        .ratio-btn.active {
+            background: var(--theme-primary);
+            transform: translate(0px, 0px);
+            box-shadow: 2px 2px 0px var(--theme-foreground);
+            border-color: var(--theme-foreground);
+        }
+
+        /* Bottom Buttons in Sidebar */
+        .sidebar-footer {
+            padding: 24px;
+            border-top: 4px solid var(--theme-foreground);
+            background: var(--theme-background);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--theme-primary);
+            color: var(--theme-foreground);
+            border: 3px solid var(--theme-foreground);
+            padding: 14px;
+            font-family: 'Space Mono', monospace;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.15s;
+            box-shadow: 4px 4px 0px var(--theme-foreground);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--theme-accent);
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px var(--theme-foreground);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px var(--theme-foreground);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            background: var(--theme-muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            border-color: var(--theme-foreground);
+        }
+
+        /* Left Preview Section */
+        .preview-area {
+            flex-grow: 1;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--theme-preview-bg);
+            background-image: radial-gradient(var(--theme-grid-color) 2px, transparent 2px);
+            background-size: 24px 24px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Interactive Viewport Wrapper */
+        .preview-wrapper {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            padding-bottom: 80px; /* Shift centered frame up more */
+        }
+
+        /* The actual box captured by html2canvas */
+        .scene-container {
+            position: relative;
+            background: var(--scene-bg);
+            border-radius: 0px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px solid var(--theme-foreground);
+            box-shadow: 8px 8px 0px 0px var(--theme-foreground);
+            transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+
+            /* Base container sizes, modified dynamically by JS */
+            width: 800px;
+            height: 450px;
+        }
+
+        .scene-container.borderless-capture {
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Scene layouts */
+        .scene-content {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            padding: 6%;
+            /* Dynamic spacing to ensure no cutoff */
+        }
+
+        /* Toggle visibility depending on selected scene */
+        /* Toggle visibility depending on selected scene */
+        .macos-scene-content {
+            display: flex;
+        }
+
+        /* --- SCENE 1: macOS Window --- */
+        .macos-window {
+            display: flex;
+            flex-direction: column;
+            background: #1e1e1e;
+            border-radius: var(--scene-radius);
+            box-shadow: var(--scene-shadow);
+            border: var(--scene-border-width) solid var(--scene-border-color);
+            overflow: hidden;
+        }
+
+        .macos-titlebar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 38px;
+            background: #1e1e1e;
+            padding: 0 16px;
+            border-bottom: 1px solid #2d2d2d;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .macos-traffic-lights {
+            display: flex;
+            gap: 8px;
+        }
+
+        .macos-traffic-lights .light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .macos-traffic-lights .red {
+            background: #ff5f56;
+        }
+
+        .macos-traffic-lights .yellow {
+            background: #ffbd2e;
+        }
+
+        .macos-traffic-lights .green {
+            background: #27c93f;
+        }
+
+        .macos-title {
+            color: #e3e3e3;
+            font-size: 13px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 45%;
+            text-align: center;
+        }
+
+        .macos-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .macos-actions .action-btn {
+            background: none;
+            border: none;
+            color: #8c8c8c;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .macos-actions .action-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .macos-actions .onlyoffice-btn {
+            background: #2b2b2b;
+            border: 1px solid #3c3c3c;
+            color: #e3e3e3;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            white-space: nowrap;
+        }
+
+        .macos-content {
+            flex-grow: 1;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1e1e1e;
+            width: 100%;
+            height: 100%;
+        }
+
+        .macos-content img {
+            display: block;
+            border-radius: var(--scene-radius);
+        }
+
+
+
+        /* Canvas indicators */
+        .canvas-actions-container {
+            position: absolute;
+            bottom: 44px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            z-index: 20;
+        }
+
+        .canvas-actions-container .btn-primary {
+            padding: 14px 28px;
+            font-size: 15px;
+            box-shadow: 6px 6px 0px var(--theme-foreground);
+            width: auto;
+        }
+
+        .canvas-actions-container .btn-primary i {
+            width: 18px;
+            height: 18px;
+        }
+
+        .canvas-actions-container .btn-primary:hover:not(:disabled) {
+            transform: translate(-3px, -3px);
+            box-shadow: 9px 9px 0px var(--theme-foreground);
+        }
+
+        .canvas-actions-container .btn-primary:active:not(:disabled) {
+            transform: translate(2px, 2px);
+            box-shadow: 3px 3px 0px var(--theme-foreground);
+        }
+
+        .view-info {
+            background: var(--theme-background);
+            border: 2px solid var(--theme-foreground);
+            box-shadow: 6px 6px 0px var(--theme-foreground);
+            padding: 14px 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Space Mono', monospace;
+            text-transform: uppercase;
+            color: var(--theme-foreground);
+            z-index: 10;
+            white-space: nowrap;
+        }
+
+        .view-info span {
+            width: 12px;
+            height: 12px;
+            background: #27c93f;
+            border-radius: 50%;
+            border: 1px solid var(--theme-foreground);
+        }
+
+        /* Helper styles for settings toggle */
+        .only-macos-setting {
+            display: none;
+        }
+
+        /* Empty State & Loader Overlay Styles */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+            color: var(--theme-foreground);
+            width: 100%;
+            height: 100%;
+            min-height: 180px;
+            user-select: none;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .empty-icon {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 12px;
+            color: var(--theme-primary);
+            opacity: 0.9;
+        }
+
+        .empty-state span {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--theme-foreground);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .empty-state p {
+            font-size: 11px;
+            max-width: 220px;
+            line-height: 1.4;
+            font-family: 'Inter', sans-serif;
+        }
+
+
+
+        /* Toggle visibility depending on state */
+        .scene-container.is-empty img {
+            display: none !important;
+        }
+
+        .scene-container:not(.is-empty) .empty-state {
+            display: none !important;
+        }
+
+        .scene-container:not(.is-empty) img {
+            display: block !important;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            z-index: 100;
+        }
+
+        .loader-spinner {
+            width: 120px;
+            height: 24px;
+            border: 3px solid var(--theme-foreground);
+            background: var(--theme-background);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loader-spinner::after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 100%;
+            background: var(--theme-primary);
+            position: absolute;
+            top: 0;
+            left: 0;
+            animation: loadingBar 1.2s infinite linear;
+            border-right: 3px solid var(--theme-foreground);
+        }
+
+        @keyframes loadingBar {
+            0% { left: -40px; }
+            100% { left: 120px; }
+        }
+
+        .loader-text {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--theme-foreground);
+            letter-spacing: 0.5px;
+            font-family: 'Space Mono', monospace;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+
+<body class="theme-mint">
+    <div class="app-container">
+
+        <!-- RIGHT SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-title">RawCert</div>
+            </div>
+
+            <!-- Horizontal Tab Navbar -->
+            <div class="sidebar-nav">
+                <button class="nav-tab active" data-tab="home" title="Home / Upload">
+                    <i data-lucide="home"></i>
+                    <span>Home</span>
+                </button>
+                <button class="nav-tab" data-tab="about" title="Layout Settings">
+                    <i data-lucide="sliders"></i>
+                    <span>Layout</span>
+                </button>
+                <button class="nav-tab" data-tab="mission" title="Canvas & Theme">
+                    <i data-lucide="palette"></i>
+                    <span>Canvas</span>
+                </button>
+                <button class="nav-tab" data-tab="contact" title="Export & Connect">
+                    <i data-lucide="send"></i>
+                    <span>Connect</span>
+                </button>
+            </div>
+
+            <div class="sidebar-content">
+
+                <!-- TAB 1: HOME (Upload & Metadata) -->
+                <div class="tab-panel active" id="tab-panel-home">
+                    <!-- SECTION 1: UPLOAD -->
+                    <div class="setting-group">
+                        <div class="setting-label">
+                            <i data-lucide="upload" style="width:14px;height:14px;"></i> Certificate File
+                        </div>
+                        <div class="setting-card">
+                            <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                                <i data-lucide="file-text" class="upload-icon" style="width:28px;height:28px;"></i>
+                                <div class="upload-text">Upload Image or PDF</div>
+                                <div class="upload-subtext">Drag & drop or browse from disk</div>
+                                <input type="file" id="file-input" class="hidden-input" accept="image/*,application/pdf">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3: WINDOW TEXT -->
+                    <div class="setting-group">
+                        <div class="setting-label">
+                            <i data-lucide="edit-3" style="width:14px;height:14px;"></i> macOS Parameters
+                        </div>
+                        <div class="setting-card">
+                            <div class="control-row">
+                                <div class="control-header">Document Title</div>
+                                <input type="text" id="title-input" class="input-text" value="Certification.pdf">
+                            </div>
+                            <div class="control-row">
+                                <div class="control-header">Action Button Text</div>
+                                <input type="text" id="btn-text-input" class="input-text" value="Open with ONLYOFFICE">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: ABOUT (Layout Adjustments) -->
+                <div class="tab-panel" id="tab-panel-about">
+                    <!-- SECTION 6: LAYOUT ADJUSTMENTS -->
+                    <div class="setting-group">
+                        <div class="setting-label">
+                            <i data-lucide="sliders" style="width:14px;height:14px;"></i> Layout Adjustments
+                        </div>
+                        <div class="setting-card">
+                            <div class="control-row">
+                                <div class="control-header">
+                                    <span>Shadow Intensity</span>
+                                    <span class="control-val" id="val-shadow">Cinematic</span>
+                                </div>
+                                <input type="range" id="slider-shadow" class="slider-input" min="0" max="3" value="3">
+                            </div>
+
+                            <div class="control-row">
+                                <div class="control-header">
+                                    <span>Corner Roundness</span>
+                                    <span class="control-val" id="val-radius">12px</span>
+                                </div>
+                                <input type="range" id="slider-radius" class="slider-input" min="0" max="32" value="12">
+                            </div>
+
+                            <div class="control-row">
+                                <div class="control-header">
+                                    <span>Border Width</span>
+                                    <span class="control-val" id="val-border">1px</span>
+                                </div>
+                                <input type="range" id="slider-border" class="slider-input" min="0" max="8" value="1">
+                            </div>
+
+                            <div class="control-row">
+                                <div class="control-header">
+                                    <span>Border Tint</span>
+                                </div>
+                                <div class="color-picker-wrapper">
+                                    <input type="color" id="border-color-picker" class="color-picker" value="#333333">
+                                    <span id="border-color-hex"
+                                        style="font-size: 13px; font-family: monospace;">#333333</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: MISSION (Aspect Ratio & Background Wallpaper & Theme Presets) -->
+                <div class="tab-panel" id="tab-panel-mission">
+                    <!-- SECTION 4: ASPECT RATIO -->
+                    <div class="setting-group">
+                        <div class="setting-label">
+                            <i data-lucide="maximize" style="width:14px;height:14px;"></i> Scene Aspect Ratio
+                        </div>
+                        <div class="ratio-group">
+                            <button class="ratio-btn active" data-ratio="16-9">16:9</button>
+                            <button class="ratio-btn" data-ratio="4-3">4:3</button>
+                            <button class="ratio-btn" data-ratio="1-1">1:1</button>
+                            <button class="ratio-btn" data-ratio="original">Original</button>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 5: BACKDROP WALLPAPER -->
+                    <div class="setting-group">
+                        <div class="setting-label">
+                            <i data-lucide="palette" style="width:14px;height:14px;"></i> Background Wallpaper
+                        </div>
+                        <div class="setting-card">
+                            <div class="control-row">
+                                <div class="control-header">Preset Gradients</div>
+                                <div class="gradient-grid">
+                                    <div class="gradient-dot active g-1" data-bg-type="preset"
+                                        data-bg="radial-gradient(circle at center, #232730 0%, #0a0c10 100%)"></div>
+                                    <div class="gradient-dot g-2" data-bg-type="preset"
+                                        data-bg="linear-gradient(135deg, #1f1c2c 0%, #928dab 100%)"></div>
+                                    <div class="gradient-dot g-3" data-bg-type="preset"
+                                        data-bg="linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%)"></div>
+                                    <div class="gradient-dot g-4" data-bg-type="preset"
+                                        data-bg="linear-gradient(135deg, #3a7bd5 0%, #3a6073 100%)"></div>
+                                    <div class="gradient-dot g-5" data-bg-type="preset"
+                                        data-bg="linear-gradient(135deg, #111827 0%, #312e81 100%)"></div>
+                                    <div class="gradient-dot g-6" data-bg-type="preset"
+                                        data-bg="linear-gradient(135deg, #1e1512 0%, #0d0807 100%)"></div>
+                                    <div class="gradient-dot g-7" data-bg-type="preset"
+                                        data-bg="linear-gradient(135deg, #051923 0%, #003554 100%)"></div>
+                                    <div class="gradient-dot g-8" data-bg-type="preset"
+                                        data-bg="linear-gradient(135deg, #2a0845 0%, #6441a5 100%)"></div>
+                                    <div class="gradient-dot g-9" data-bg-type="preset"
+                                        data-bg="linear-gradient(135deg, #141e30 0%, #243b55 100%)"></div>
+                                    <div class="gradient-dot g-10" data-bg-type="preset" data-bg="#dfdcd6"></div>
+                                </div>
+                            </div>
+
+                            <div class="control-row">
+                                <div class="control-header">
+                                    <span>Custom Solid Color</span>
+                                </div>
+                                <div class="color-picker-wrapper">
+                                    <input type="color" id="custom-bg-color" class="color-picker" value="#0a0a0c">
+                                    <span id="custom-color-hex"
+                                        style="font-size: 13px; font-family: monospace; color: var(--theme-foreground);">#0A0A0C</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION: INTERFACE THEME -->
+                    <div class="setting-group">
+                        <div class="setting-label">
+                            <i data-lucide="layout-template" style="width:14px;height:14px;"></i> Interface Theme
+                        </div>
+                        <div class="setting-card">
+                            <div class="theme-grid">
+                                <div class="theme-option-card active" data-ui-theme="mint">
+                                    <div class="theme-preview-dots">
+                                        <span class="theme-dot" style="background-color: #98D8C8;"></span>
+                                        <span class="theme-dot" style="background-color: #E6B8A2;"></span>
+                                        <span class="theme-dot" style="background-color: #3D5A5B;"></span>
+                                    </div>
+                                    <span>Mint Breeze</span>
+                                </div>
+                                <div class="theme-option-card" data-ui-theme="retro">
+                                    <div class="theme-preview-dots">
+                                        <span class="theme-dot" style="background-color: #FDE047;"></span>
+                                        <span class="theme-dot" style="background-color: #E2E8F0;"></span>
+                                        <span class="theme-dot" style="background-color: #1E293B;"></span>
+                                    </div>
+                                    <span>Classic Retro</span>
+                                </div>
+                                <div class="theme-option-card" data-ui-theme="cyber">
+                                    <div class="theme-preview-dots">
+                                        <span class="theme-dot" style="background-color: #F43F5E;"></span>
+                                        <span class="theme-dot" style="background-color: #6366F1;"></span>
+                                        <span class="theme-dot" style="background-color: #0F172A;"></span>
+                                    </div>
+                                    <span>Cyber Glow</span>
+                                </div>
+                                <div class="theme-option-card" data-ui-theme="warm">
+                                    <div class="theme-preview-dots">
+                                        <span class="theme-dot" style="background-color: #F97316;"></span>
+                                        <span class="theme-dot" style="background-color: #A7F3D0;"></span>
+                                        <span class="theme-dot" style="background-color: #14532D;"></span>
+                                    </div>
+                                    <span>Warm Sage</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: CONTACT (Branding & Connect) -->
+                <div class="tab-panel" id="tab-panel-contact">
+                    <div class="setting-group">
+                        <div class="setting-label">
+                            <i data-lucide="info" style="width:14px;height:14px;"></i> About Developer
+                        </div>
+                        <div class="setting-card" style="text-align: center; gap: 14px;">
+                            <h3 style="font-family: 'EB Garamond', serif; font-style: italic; font-size: 24px; font-weight: bold; margin-bottom: 4px; color: var(--theme-foreground);">Let's Connect</h3>
+                            <p style="font-size: 13px; line-height: 1.5; margin-bottom: 8px; color: var(--theme-foreground);">
+                                Build gorgeous cinematic showcases for your accomplishments with our premium template editor.
+                            </p>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                <a href="https://github.com" target="_blank" class="btn-primary" style="text-decoration: none; padding: 8px 12px; font-size: 12px;">
+                                    <i data-lucide="github" style="width:16px;height:16px;"></i> GitHub Code
+                                </a>
+                                <a href="https://linkedin.com" target="_blank" class="btn-primary" style="text-decoration: none; padding: 8px 12px; font-size: 12px; background: var(--theme-accent); color: var(--theme-foreground);">
+                                    <i data-lucide="linkedin" style="width:16px;height:16px;"></i> LinkedIn Profile
+                                </a>
+                            </div>
+                            <div style="font-family: 'Space Mono', monospace; font-size: 10px; margin-top: 12px; opacity: 0.8; color: var(--theme-foreground);">
+                                © 2026 RAWCERT. ALL RIGHTS RESERVED.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RIGHT PREVIEW CANVAS -->
+        <div class="preview-area">
+            <!-- LOADING OVERLAY -->
+            <div class="loading-overlay" id="loading-overlay">
+                <div class="loader-spinner"></div>
+                <div class="loader-text" id="loader-status-text">Processing Certificate...</div>
+            </div>
+
+            <div class="preview-wrapper">
+                <div class="scene-container is-empty" id="capture-scene" data-scene="macos" data-aspect-ratio="16-9">
+
+                    <!-- Scene 1: macOS Window -->
+                    <div class="scene-content macos-scene-content">
+                        <div class="macos-window">
+                            <div class="macos-titlebar">
+                                <div class="macos-traffic-lights">
+                                    <span class="light red"></span>
+                                    <span class="light yellow"></span>
+                                    <span class="light green"></span>
+                                </div>
+                                <div class="macos-title" id="macos-file-name">Certification.pdf</div>
+                                <div class="macos-actions">
+                                    <span class="action-btn" id="macos-download-btn"
+                                        style="cursor: pointer; opacity: 0.5; pointer-events: none;"
+                                        title="Download PNG"><i data-lucide="download"></i></span>
+                                    <span class="action-btn"><i data-lucide="info"></i></span>
+                                    <span class="action-btn"><i data-lucide="share-2"></i></span>
+                                    <button class="onlyoffice-btn" id="macos-action-btn-text">Open with
+                                        ONLYOFFICE</button>
+                                </div>
+                            </div>
+                            <div class="macos-content">
+                                <div class="empty-state">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="empty-icon">
+                                        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                                        <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                                        <path d="M9 15h6" />
+                                        <path d="M12 12v6" />
+                                    </svg>
+                                    <span>No Certificate Uploaded</span>
+                                    <p>Drag & drop or browse a PDF/Image to begin</p>
+                                </div>
+                                <img id="certificate-img-macos" src="" alt="Certificate">
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+                </div>
+            </div>
+
+            <!-- Footer actions & indicator -->
+            <div class="canvas-actions-container">
+                <div class="view-info">
+                    <span></span> Realtime Preview
+                </div>
+                <button class="btn-primary" id="download-btn" disabled>
+                    <i data-lucide="download"></i>
+                    <span class="btn-text">Download Scene</span>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // State Variables
+        let currentImageSrc = null;
+        let originalAspectRatio = 1.414; // Default to A4 landscape ratio for empty state preview
+
+        // Select DOM nodes
+        const sceneContainer = document.getElementById('capture-scene');
+        const previewWrapper = document.querySelector('.preview-wrapper');
+        const downloadBtn = document.getElementById('download-btn');
+        const fileInput = document.getElementById('file-input');
+        const dropZone = document.getElementById('drop-zone');
+        const titleInput = document.getElementById('title-input');
+        const btnTextInput = document.getElementById('btn-text-input');
+        const customBgColor = document.getElementById('custom-bg-color');
+        const borderTintPicker = document.getElementById('border-color-picker');
+
+        // Mapped Elements
+        const imgElements = {
+            macos: document.getElementById('certificate-img-macos')
+        };
+
+        // Set source for all scene images and update layout aspect ratios
+        function setCertificateImage(src, filename) {
+            currentImageSrc = src;
+            const testImg = new Image();
+            testImg.onload = function () {
+                originalAspectRatio = testImg.width / testImg.height;
+
+                // Populate all image sources
+                Object.values(imgElements).forEach(el => {
+                    el.src = src;
+                });
+
+                // Set document title in inputs and title bar
+                if (filename) {
+                    document.getElementById('macos-file-name').textContent = filename;
+                    titleInput.value = filename;
+                }
+
+                // Enable download actions and hide empty state
+                sceneContainer.classList.remove('is-empty');
+                downloadBtn.disabled = false;
+
+                const macosDlBtn = document.getElementById('macos-download-btn');
+                if (macosDlBtn) {
+                    macosDlBtn.style.opacity = '1';
+                    macosDlBtn.style.pointerEvents = 'auto';
+                }
+
+                // Hide loader overlay
+                document.getElementById('loading-overlay').style.display = 'none';
+
+                // Recalculate sizes
+                updateSceneLayout();
+            };
+
+            testImg.onerror = function () {
+                document.getElementById('loading-overlay').style.display = 'none';
+                alert('Failed to load certificate image.');
+            };
+
+            testImg.src = src;
+        }
+
+        // Resizing & Positioning Engine to maintain strict fitting (no scrolls, no empty space)
+        function updateSceneLayout() {
+            if (!previewWrapper || !sceneContainer) return;
+
+            const containerWidth = previewWrapper.clientWidth;
+            const containerHeight = previewWrapper.clientHeight;
+
+            // Determine ratio base
+            const selectedRatio = sceneContainer.dataset.aspectRatio;
+            let ratio = 16 / 9;
+            if (selectedRatio === '4-3') ratio = 4 / 3;
+            else if (selectedRatio === '1-1') ratio = 1 / 1;
+            else if (selectedRatio === 'original') ratio = originalAspectRatio;
+
+            let sceneWidth, sceneHeight;
+
+            // Fit the scene inside the bounding boxes of previewWrapper
+            if (containerWidth / containerHeight > ratio) {
+                sceneHeight = containerHeight;
+                sceneWidth = sceneHeight * ratio;
+            } else {
+                sceneWidth = containerWidth;
+                sceneHeight = sceneWidth / ratio;
+            }
+
+            // Shrink slightly to leave page margin (aesthetic frame)
+            const scaleFactor = 0.9;
+            const finalSceneWidth = Math.floor(sceneWidth * scaleFactor);
+            const finalSceneHeight = Math.floor(sceneHeight * scaleFactor);
+            sceneContainer.style.width = `${finalSceneWidth}px`;
+            sceneContainer.style.height = `${finalSceneHeight}px`;
+
+            // Calculate maximum content space (leave 6% padding inside the scene)
+            const availWidth = finalSceneWidth * 0.88;
+            const availHeight = finalSceneHeight * 0.88;
+
+            // Get current layout variables
+            const borderWidth = parseInt(document.getElementById('slider-border').value) || 1;
+            const certRatio = originalAspectRatio;
+
+            // Define sizing configurations for each template
+            const sceneSizing = {
+                macos: {
+                    extraW: 2 * borderWidth,
+                    extraH: 38 + 2 * borderWidth, // 38px titlebar
+                    frameSelector: '.macos-window',
+                    imgElement: imgElements.macos
+                }
+            };
+
+            // Resize all scene frames and images proportionally to match certificate ratio
+            Object.entries(sceneSizing).forEach(([key, cfg]) => {
+                const maxImgW1 = availWidth - cfg.extraW;
+                const maxImgW2 = (availHeight - cfg.extraH) * certRatio;
+
+                let imgW = Math.min(maxImgW1, maxImgW2);
+                if (imgW < 10) imgW = 10;
+                const imgH = imgW / certRatio;
+
+                // Apply style to image
+                if (cfg.imgElement) {
+                    cfg.imgElement.style.width = `${Math.floor(imgW)}px`;
+                    cfg.imgElement.style.height = `${Math.floor(imgH)}px`;
+                }
+
+                // Apply style to frame container
+                const frameEl = document.querySelector(cfg.frameSelector);
+                if (frameEl) {
+                    frameEl.style.width = `${Math.floor(imgW + cfg.extraW)}px`;
+                    frameEl.style.height = `${Math.floor(imgH + cfg.extraH)}px`;
+                }
+            });
+        }
+
+        // Resize listener
+        window.addEventListener('resize', updateSceneLayout);
+
+        // PDF rendering engine using pdf.js
+        const pdfjsLib = window['pdfjs-dist/build/pdf'];
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        function handleFile(file) {
+            if (!file) return;
+
+            const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf');
+            const isImage = file.type.startsWith('image/');
+
+            if (!isPdf && !isImage) {
+                alert('Format not supported. Please upload a PDF file or an Image (PNG, JPG, WebP).');
+                return;
+            }
+
+            // Show loader overlay with status message
+            const loader = document.getElementById('loading-overlay');
+            const statusText = document.getElementById('loader-status-text');
+            loader.style.display = 'flex';
+            statusText.textContent = isPdf ? 'Parsing PDF Document...' : 'Loading Certificate Image...';
+
+            if (isPdf) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const typedarray = new Uint8Array(e.target.result);
+                    pdfjsLib.getDocument(typedarray).promise.then(function (pdf) {
+                        statusText.textContent = 'Rendering PDF Page...';
+                        // Load the first page
+                        pdf.getPage(1).then(function (page) {
+                            const viewport = page.getViewport({ scale: 2.0 }); // Render double scale for high fidelity
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+
+                            const renderContext = {
+                                canvasContext: context,
+                                viewport: viewport
+                            };
+
+                            page.render(renderContext).promise.then(function () {
+                                const dataUrl = canvas.toDataURL('image/png');
+                                setCertificateImage(dataUrl, file.name);
+                            });
+                        });
+                    }).catch(function (err) {
+                        console.error('Error rendering PDF: ', err);
+                        loader.style.display = 'none';
+                        alert('Could not render the PDF file: ' + err.message);
+                    });
+                };
+                reader.readAsArrayBuffer(file);
+            } else if (isImage) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    setCertificateImage(e.target.result, file.name);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Uploader Event Listeners
+        dropZone.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const files = e.target.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+
+
+        // Control: Window text values
+        titleInput.addEventListener('input', (e) => {
+            document.getElementById('macos-file-name').textContent = e.target.value;
+        });
+
+        btnTextInput.addEventListener('input', (e) => {
+            document.getElementById('macos-action-btn-text').textContent = e.target.value;
+        });
+
+        // Control: Aspect Ratio
+        const ratioBtns = document.querySelectorAll('.ratio-btn');
+        ratioBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                ratioBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                sceneContainer.dataset.aspectRatio = btn.dataset.ratio;
+                updateSceneLayout();
+            });
+        });
+
+        // Control: Curated Background Presets
+        const bgDots = document.querySelectorAll('.gradient-dot');
+        function applyBackgroundDot(dot) {
+            bgDots.forEach(d => d.classList.remove('active'));
+            dot.classList.add('active');
+
+            const bgVal = dot.dataset.bg;
+            document.documentElement.style.setProperty('--scene-bg', bgVal);
+        }
+
+        bgDots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                applyBackgroundDot(dot);
+            });
+        });
+
+        // Control: Custom background color picker
+        customBgColor.addEventListener('input', (e) => {
+            const color = e.target.value;
+            document.getElementById('custom-color-hex').textContent = color.toUpperCase();
+            document.documentElement.style.setProperty('--scene-bg', color);
+
+            // Deactivate dots
+            bgDots.forEach(d => d.classList.remove('active'));
+        });
+
+        // Control: Live layout sliders
+        const sliderShadow = document.getElementById('slider-shadow');
+        const shadowLabels = ['None', 'Soft', 'Medium', 'Cinematic'];
+        sliderShadow.addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            document.getElementById('val-shadow').textContent = shadowLabels[val];
+
+            let shadowStyle = 'none';
+            if (val === 1) {
+                shadowStyle = '0 6px 16px rgba(0, 0, 0, 0.25)';
+            } else if (val === 2) {
+                shadowStyle = '0 16px 36px -4px rgba(0, 0, 0, 0.4)';
+            } else if (val === 3) {
+                shadowStyle = '0 32px 64px -16px rgba(0, 0, 0, 0.6), 0 0 50px rgba(0, 0, 0, 0.15)';
+            }
+            document.documentElement.style.setProperty('--scene-shadow', shadowStyle);
+        });
+
+        const sliderRadius = document.getElementById('slider-radius');
+        sliderRadius.addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('val-radius').textContent = `${val}px`;
+            document.documentElement.style.setProperty('--scene-radius', `${val}px`);
+        });
+
+        const sliderBorder = document.getElementById('slider-border');
+        sliderBorder.addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('val-border').textContent = `${val}px`;
+            document.documentElement.style.setProperty('--scene-border-width', `${val}px`);
+            updateSceneLayout();
+        });
+
+        borderTintPicker.addEventListener('input', (e) => {
+            const color = e.target.value;
+            document.getElementById('border-color-hex').textContent = color.toUpperCase();
+            document.documentElement.style.setProperty('--scene-border-color', color);
+        });
+
+        // High resolution download capturing with html2canvas
+        downloadBtn.addEventListener('click', async () => {
+            const btnText = downloadBtn.querySelector('.btn-text');
+            btnText.textContent = 'Generating Scene...';
+            downloadBtn.disabled = true;
+
+            try {
+                // Temporarily remove Neo-Brutalist borders and shadows inline for export
+                sceneContainer.style.border = 'none';
+                sceneContainer.style.boxShadow = 'none';
+
+                // Force browser style reflow and wait a tiny fraction of a second
+                void sceneContainer.offsetHeight;
+                await new Promise(resolve => setTimeout(resolve, 50));
+
+                // Let html2canvas generate high fidelity screenshot
+                // We use scale: 2 for print-ready resolution and useCORS/allowTaint for local rendering
+                const canvas = await html2canvas(sceneContainer, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: null,
+                    logging: false
+                });
+
+                const image = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+
+                // Clean filename
+                const customTitle = titleInput.value || 'certificate_scene';
+                const cleanTitle = customTitle.replace(/[\s.]+/g, '_');
+
+                link.download = `${cleanTitle}_scene.png`;
+                link.href = image;
+                link.click();
+            } catch (err) {
+                console.error('Export error: ', err);
+                alert('There was an error generating the image. Please make sure the files uploaded are readable.');
+            } finally {
+                // Restore Neo-Brutalist borders and shadows for live preview
+                sceneContainer.style.border = '';
+                sceneContainer.style.boxShadow = '';
+                btnText.textContent = 'Download Scene';
+                downloadBtn.disabled = false;
+            }
+        });
+
+        // Wire macOS window download button to trigger the same download function
+        document.getElementById('macos-download-btn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            downloadBtn.click();
+        });
+
+        // Tab navigation switching logic
+        const tabs = document.querySelectorAll('.nav-tab');
+        const panels = document.querySelectorAll('.tab-panel');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                
+                // Toggle active tab class
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Toggle active panel class
+                panels.forEach(p => {
+                    if (p.id === `tab-panel-${targetTab}`) {
+                        p.classList.add('active');
+                    } else {
+                        p.classList.remove('active');
+                    }
+                });
+            });
+        });
+
+        // Interface Theme switching logic
+        const themeCards = document.querySelectorAll('.theme-option-card');
+        themeCards.forEach(card => {
+            card.addEventListener('click', () => {
+                themeCards.forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                
+                const selectedTheme = card.dataset.uiTheme;
+                document.body.className = `theme-${selectedTheme}`;
+            });
+        });
+
+        // Run initialization with empty state
+        updateSceneLayout();
+
+    </script>
+</body>
+
+</html>
