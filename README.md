@@ -52,9 +52,9 @@ RawCert is a static, self-contained single-page application. There are no extern
 ### Quick Start
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/rawcert.git
+   git clone https://github.com/anshvermadev/RawCert-Premium-Certificate-Scene-Generator.git
    ```
-2. Double-click [index.html](file:///d:/Deep/index.html) to open it in your browser.
+2. Double-click [index.html](index.html) to open it in your browser.
 3. Drag your certificate file into the active uploader zone, customize the backdrop, and click **Download Scene**.
 
 ---
