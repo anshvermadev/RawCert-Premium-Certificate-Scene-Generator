@@ -1,4 +1,4 @@
-# 📐 RawCert — Premium Certificate Scene Generator
+# 📐 RawCert - Premium Certificate Scene Generator
 
 > Turn raw PDFs and landscape certificates into gorgeous, scroll-stopping social media showcases. Built with a bold, high-contrast Neo-Brutalist design system.
 
