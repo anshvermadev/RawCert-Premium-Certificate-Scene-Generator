@@ -11,7 +11,7 @@ Sharing accomplishments on **LinkedIn**, **Twitter/X**, or **Instagram** is esse
 **RawCert** wraps your credentials inside a high-fidelity macOS window mockup placed on cinematic gradient backdrops, instantly elevating the visual impact and engagement of your posts.
 
 | standard sharing | with RawCert 🚀 |
-| :--- | :--- |
+| :---- | :---- |
 | ❌ Plain landscape certificate gets cropped. |  Beautiful, centered macOS mockup framing. |
 | ❌ Low visual hierarchy in busy feeds. |  Stunning radial & linear gradient backgrounds. |
 | ❌ PDF links require clicks to view. |  High-res PNG ready to read immediately. |
